@@ -1,5 +1,5 @@
 # TAS_On_Azure
-
+***updated to reflect latest az cli breaking changes, sanity checks, and a few other things***
 This is a quick way to get Opsmanager deployed in Azure. The script is making the following assumptions: 
 
 1) You are a CE on either East or West coast with access to the GSS Azure subscription (VMware account). If you don't have access to this subscription please request it in the labs channel.
