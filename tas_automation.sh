@@ -18,6 +18,10 @@ else
     brew install azure-cli
 fi
 
+if [ -x "dfkjhs" ]; then
+  exit $?
+fi
+
 #check if uaac is installed
 if [ -f "/usr/local/bin/uaac" ]; then
     echo "uaac is already installed"
@@ -310,12 +314,12 @@ az vm create --name opsman-$OPSMAN_VERSION --resource-group $RESOURCE_GROUP \
 
 OPSMAN_IP=$(az network public-ip show --name ops-manager-ip --resource-group $RESOURCE_GROUP | grep ipAddress | cut -c 17- | sed 's/",$//')
 OPSMAN_URL="opsman.$RESOURCE_GROUP.taslab4tanzu.com"
-echo $MAC_ADMIN | sudo -S sh -c -e "echo '$OPSMAN_IP' '$OPSMAN_URL' >> /etc/hosts"
+echo '$MAC_ADMIN' | sudo -S sh -c -e "echo '$OPSMAN_IP' '$OPSMAN_URL' >> /etc/hosts"
 
 
 opsman_authentication_setup()
 {
-  cat <<EOF
+  cat <<EOF | jq -c .
 {
     "setup": {
     "decryption_passphrase": "$SP_SECRET",
@@ -330,9 +334,11 @@ opsman_authentication_setup()
 EOF
 }
 
-curl -k -X POST -H "Content-Type: application/json" -d "$(opsman_authentication_setup)" "https://$OPSMAN_URL/api/v0/setup"
+echo "pausing 10 seconds to allow services on Ops Manager a little time to start..." 
+sleep 10
+curl -k -X POST -H "Content-Type: application/json" -d \""$(opsman_authentication_setup)"\" "https://$OPSMAN_URL/api/v0/setup"
 
-echo "Setting up Opsman authentication..."
+echo "Setting up Opsman authentication in 60 seconds.  Pausing for vm to complete auth setup..."
 sleep 60
 
 uaac target https://$OPSMAN_URL/uaa --skip-ssl-validation
