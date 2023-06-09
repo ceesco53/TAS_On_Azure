@@ -129,7 +129,7 @@ az vm create --name opsman-"$OPSMAN_VERSION" --resource-group "$RESOURCE_GROUP" 
 
 OPSMAN_IP=$(az network public-ip show --name ops-manager-ip --resource-group "$RESOURCE_GROUP" | grep ipAddress | cut -c 17- | sed 's/",$//')
 OPSMAN_URL="opsman.$RESOURCE_GROUP.taslab4tanzu.com"
-echo $MAC_ADMIN | sudo -S sh -c -e "echo '$OPSMAN_IP' '$OPSMAN_URL' >> /etc/hosts"
+echo '$MAC_ADMIN' | sudo -S sh -c -e "echo '$OPSMAN_IP' '$OPSMAN_URL' >> /etc/hosts"
 
 opsman_authentication_setup()
 {
@@ -148,9 +148,12 @@ opsman_authentication_setup()
 EOF
 }
 
+echo "pausing 10 seconds to allow services on Ops Manager a little time to start..." 
+sleep 10
+
 curl -k -X POST -H "Content-Type: application/json" -d \""$(opsman_authentication_setup)"\" "https://$OPSMAN_URL/api/v0/setup"
 
-echo "Setting up Opsman authentication..."
+echo "Setting up Opsman authentication in 60 seconds.  Pausing for vm to complete auth setup..."
 sleep 60
 
 uaac target https://"$OPSMAN_URL"/uaa --skip-ssl-validation
