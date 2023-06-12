@@ -7,6 +7,11 @@ function azure_login(){
   echo "Log in with your VMware AD account on your browser"
   az login
 
+  SELECTED="$(az account list | grep -v "\-\-" | grep -v Name | fzf)"
+
+  SUBSCRIPTION_ID=$(echo "$SELECTED" | cut -f3 -w)
+  TENANT_ID=$(echo "$SELECTED" | cut -f4 -w)
+
   read -p 'Please enter the Opsman exact version and build. You can find that info here https://network.pivotal.io/products/ops-manager/#/releases (Example: 2.10.58-build.1011) : ' OPSMAN_VERSION
   read -p 'Please enter the TAS version you would like to install (Example: 2.11.40): ' TAS_VERSION
   read -p 'Please enter your Pivnet API refresh token. If you do NOT have one: Log into pivnet > edit profile > request new refresh token): ' REFRESH_TOKEN
@@ -17,8 +22,8 @@ function azure_login(){
   read -sp 'Please enter your Mac admin password: ' MAC_ADMIN
 
   # You should only have one GSS subscription but just in case
-  SUBSCRIPTION_ID=$(az account list | grep -i "$GSS_TEAM" -B 3 | grep id | cut -c 12-47)
-  TENANT_ID=$(az account list | grep -i "$GSS_TEAM" -A 2 | grep tenantId | cut -c 18-53)
+#  SUBSCRIPTION_ID=$(az account list | grep -i "$GSS_TEAM" -B 3 | grep id | cut -c 12-47)
+#  TENANT_ID=$(az account list | grep -i "$GSS_TEAM" -A 2 | grep tenantId | cut -c 18-53)
   SP_NAME="http://BoshAzure$RESOURCE_GROUP"
   DOMAIN="test.vmware.com"
   az account set --subscription "$SUBSCRIPTION_ID"
@@ -41,7 +46,6 @@ function azure_login(){
   az provider register --namespace Microsoft.Storage
   az provider register --namespace Microsoft.Network
   az provider register --namespace Microsoft.Compute
-
 
   echo "Creating resource group..."
   if [ $GSS_TEAM = "east" ]; then

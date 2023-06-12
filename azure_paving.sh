@@ -127,6 +127,49 @@ function create_lbs(){
   --probe-name http8080
 }
 
+function create_storage_containers(){
+  CONNECTION_STRING=$(az storage account show-connection-string --name "$STORAGE_NAME" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+
+  echo "Creating other storage accounts..."
+  STORAGE_TYPE="Premium_LRS"
+  STORAGE_NAME1="${RESOURCE_GROUP}storage4tas1"
+  STORAGE_NAME2="${RESOURCE_GROUP}storage4tas2"
+  STORAGE_NAME3="${RESOURCE_GROUP}storage4tas3"
+
+  az storage account create --name "$STORAGE_NAME1" \
+  --resource-group "$RESOURCE_GROUP" --sku $STORAGE_TYPE \
+  --kind Storage --location $LOCATION
+
+  CONNECTION_STRING1=$(az storage account show-connection-string --name "$STORAGE_NAME1" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+
+  az storage container create --name bosh \
+  --connection-string "$CONNECTION_STRING1"
+  az storage container create --name stemcell \
+  --connection-string "$CONNECTION_STRING1"
+
+  az storage account create --name "$STORAGE_NAME2" \
+  --resource-group "$RESOURCE_GROUP" --sku $STORAGE_TYPE \
+  --kind Storage --location $LOCATION
+
+  CONNECTION_STRING2=$(az storage account show-connection-string --name "$STORAGE_NAME2" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+
+  az storage container create --name bosh \
+  --connection-string "$CONNECTION_STRING2"
+  az storage container create --name stemcell \
+  --connection-string "$CONNECTION_STRING2"
+
+  az storage account create --name "$STORAGE_NAME3" \
+  --resource-group "$RESOURCE_GROUP" --sku $STORAGE_TYPE \
+  --kind Storage --location $LOCATION
+
+  CONNECTION_STRING3=$(az storage account show-connection-string --name "$STORAGE_NAME3" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+
+  az storage container create --name bosh \
+  --connection-string "$CONNECTION_STRING3"
+  az storage container create --name stemcell \
+  --connection-string "$CONNECTION_STRING3"
+}
+
 pave_azure(){
   # Delegation
   create_rg
@@ -137,8 +180,16 @@ pave_azure(){
   create_bosh_storage_account
   create_storage
   create_lbs
+  create_storage_containers
 }
 
-delete_azure(){
-
-}
+#depave_azure(){
+#  delete_rg
+#  delete_tas_sg
+#  delete_opsman_sg
+#  delete_tas_vnet
+#  delete_subnets
+#  delete_bosh_storage_account
+#  delete_storage
+#  delete_lbs
+#}
