@@ -10,7 +10,11 @@ else
 fi
 
 get_status() {
-  echo $(az storage blob show --name opsman-"$OPSMAN_VERSION".vhd --connection-string "$CONNECTION_STRING" --container-name opsmanager | grep success | cut -c 18-24)
+  echo $(az storage blob show --name opsman-"$OPSMAN_VERSION".vhd --connection-string "$CONNECTION_STRING" --container-name opsmanager -o json | jq -r '.properties.copy.status')
+}
+
+blob_exists() {
+  az storage blob show --name opsman-"$OPSMAN_VERSION".vhd --connection-string "$CONNECTION_STRING" --container-name opsmanager -o json 2>/dev/null || true
 }
 
 opsman_authentication_setup()
@@ -24,8 +28,11 @@ opsman_authentication_setup()
     "identity_provider": "internal",
     "admin_user_name": "admin",
     "admin_password": "$SP_SECRET",
-    "admin_password_confirmation": "$SP_SECRET"
-    }
+    "admin_password_confirmation": "$SP_SECRET",
+    "http_proxy": "",
+    "https_proxy": "",
+    "no_proxy": ""
+  }
 }
 EOF
 }
@@ -35,10 +42,16 @@ function boot_opsman(){
   echo "copying image to storage..."
   OPS_MAN_IMAGE_URL=https://opsmanager$LOCATION.blob.core.windows.net/images/ops-manager-$OPSMAN_VERSION.vhd
 
-  az storage blob copy start --source-uri "$OPS_MAN_IMAGE_URL" \
-  --connection-string "$CONNECTION_STRING" \
-  --destination-container opsmanager \
-  --destination-blob opsman-"$OPSMAN_VERSION".vhd
+  status=$(blob_exists)
+
+  if [[ $status =~ '"status":' ]]; then
+    echo "Blobstore already exists."
+  else
+    az storage blob copy start --source-uri "$OPS_MAN_IMAGE_URL" \
+    --connection-string "$CONNECTION_STRING" \
+    --destination-container opsmanager \
+    --destination-blob opsman-"$OPSMAN_VERSION".vhd
+  fi
 
   # Create a public IP for Ops Manager
   az network public-ip create --name ops-manager-ip \
@@ -82,13 +95,13 @@ function create_opsman_vm(){
   --storage-sku Standard_LRS \
   --ssh-key-value ~/.ssh/azurekeys/opsman.pub
 
-  OPSMAN_IP=$(az network public-ip show --name ops-manager-ip --resource-group "$RESOURCE_GROUP" | grep ipAddress | cut -c 17- | sed 's/",$//')
+  OPSMAN_IP=$(az network public-ip show --name ops-manager-ip --resource-group "$RESOURCE_GROUP" -o json | jq -r .ipAddress)
   OPSMAN_URL="opsman.$RESOURCE_GROUP.taslab4tanzu.com"
-  echo $MAC_ADMIN | sudo -S sh -c -e "echo '$OPSMAN_IP' '$OPSMAN_URL' >> /etc/hosts"
+  echo "$MAC_ADMIN" | sudo -S sh -c -e "echo '$OPSMAN_IP' '$OPSMAN_URL' >> /etc/hosts"
 }
 
 function configure_opsman_auth_and_uaa(){
-  curl -k -X POST -H "Content-Type: application/json" -d \""$(opsman_authentication_setup)"\" "https://$OPSMAN_URL/api/v0/setup"
+  curl -k -X POST -H "Content-Type: application/json" -d "$(opsman_authentication_setup)" "https://$OPSMAN_URL/api/v0/setup"
 
   echo "Setting up Opsman authentication..."
   sleep 60

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# sorta need a datastructure for this as not all CLIs match their brew name.
+#
 #check_dependencies(){
 #    R=$1 && REQUIRED_DEPENDENCIES=${R[*]}
 #    MISSING_DEPENDENCIES=()

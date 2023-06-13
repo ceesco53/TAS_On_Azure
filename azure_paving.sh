@@ -82,18 +82,20 @@ function create_subnets(){
 function create_bosh_storage_account(){
   echo "Creating Bosh storage account..."
   az storage account create --name "$STORAGE_NAME" \
-  --resource-group "$RESOURCE_GROUP" \
-  --sku Standard_LRS \
-  --location "$LOCATION"
+    --resource-group "$RESOURCE_GROUP" \
+    --sku Standard_LRS \
+    --location "$LOCATION"
 }
 
 function create_storage(){
   az storage container create --name opsmanager \
-  --connection-string "$CONNECTION_STRING"
+    --connection-string "$CONNECTION_STRING"
+
   az storage container create --name bosh \
-  --connection-string "$CONNECTION_STRING"
+    --connection-string "$CONNECTION_STRING"
+
   az storage container create --name stemcell --public-access blob \
-  --connection-string "$CONNECTION_STRING"
+    --connection-string "$CONNECTION_STRING"
 
   az storage table create --name stemcells \
   --connection-string "$CONNECTION_STRING"
@@ -128,7 +130,7 @@ function create_lbs(){
 }
 
 function create_storage_containers(){
-  CONNECTION_STRING=$(az storage account show-connection-string --name "$STORAGE_NAME" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+  CONNECTION_STRING=$(az storage account show-connection-string --name "$STORAGE_NAME" --resource-group "$RESOURCE_GROUP" -o tsv)
 
   echo "Creating other storage accounts..."
   STORAGE_TYPE="Premium_LRS"
@@ -140,7 +142,7 @@ function create_storage_containers(){
   --resource-group "$RESOURCE_GROUP" --sku $STORAGE_TYPE \
   --kind Storage --location $LOCATION
 
-  CONNECTION_STRING1=$(az storage account show-connection-string --name "$STORAGE_NAME1" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+  CONNECTION_STRING1=$(az storage account show-connection-string --name "$STORAGE_NAME1" --resource-group "$RESOURCE_GROUP" -o tsv)
 
   az storage container create --name bosh \
   --connection-string "$CONNECTION_STRING1"
@@ -151,7 +153,7 @@ function create_storage_containers(){
   --resource-group "$RESOURCE_GROUP" --sku $STORAGE_TYPE \
   --kind Storage --location $LOCATION
 
-  CONNECTION_STRING2=$(az storage account show-connection-string --name "$STORAGE_NAME2" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+  CONNECTION_STRING2=$(az storage account show-connection-string --name "$STORAGE_NAME2" --resource-group "$RESOURCE_GROUP" -o tsv)
 
   az storage container create --name bosh \
   --connection-string "$CONNECTION_STRING2"
@@ -162,7 +164,7 @@ function create_storage_containers(){
   --resource-group "$RESOURCE_GROUP" --sku $STORAGE_TYPE \
   --kind Storage --location $LOCATION
 
-  CONNECTION_STRING3=$(az storage account show-connection-string --name "$STORAGE_NAME3" --resource-group "$RESOURCE_GROUP" | cut -c 24- | sed 's/"$//')
+  CONNECTION_STRING3=$(az storage account show-connection-string --name "$STORAGE_NAME3" --resource-group "$RESOURCE_GROUP" -o tsv)
 
   az storage container create --name bosh \
   --connection-string "$CONNECTION_STRING3"
@@ -178,9 +180,9 @@ pave_azure(){
   create_tas_vnet
   create_subnets
   create_bosh_storage_account
+  create_storage_containers
   create_storage
   create_lbs
-  create_storage_containers
 }
 
 #depave_azure(){

@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
-# As of Azure CLI 2.0.68, the --password parameter to create a service principal with a
-# user-defined password is no longer supported to prevent the accidental use of weak passwords.
-# if the script is being run from source, stop now
-if [ "${1}" == "test" ] ; then
-  PS1="test> " bash
-  exit $?
+#
+#
+#
+set -euxo pipefail
+
+source libs.sh
+
+if is_sourced; then
+    echo "This script is being sourced, just execute me."
+    return
 fi
 
-source dependencies.sh
-source azure_setup.sh
-source azure_paving.sh
-source opsman.sh
-source director.sh
-source tas.sh
+#
+#function foo() {
+#    log "$@"
+#}
+#
+#foo "$@"
 
+azure_login
 pave_azure
 
 boot_opsman
