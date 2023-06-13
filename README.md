@@ -8,3 +8,11 @@ This is a quick way to get Opsmanager deployed in Azure. The script is making th
 4) You have the uaac cli installed.
 
 Make sure that when it asks you to log in to Azure you use your VMware credentials!
+
+Copy the `env.sh-template` to `env.sh` and edit the right hand values.
+
+Run:
+
+    ./tas_automation.sh
+
+You should have at least an opsman on azure with the TAS tile uploaded.
