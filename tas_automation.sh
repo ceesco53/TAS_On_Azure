@@ -11,13 +11,6 @@ if is_sourced; then
     return
 fi
 
-#
-#function foo() {
-#    log "$@"
-#}
-#
-#foo "$@"
-
 azure_login
 pave_azure
 
