@@ -65,9 +65,11 @@ function upload_and_stage_tas(){
   curl -k -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $OPSMAN_TOKEN" -d "$(stage_product)" "https://$OPSMAN_URL/api/v0/staged/products"
 
   echo "Downloading Stemcell..."
-  STEMCELL_ID=$(curl -sX GET "https://network.pivotal.io/api/v2/products/elastic-runtime/releases/$RELEASE_ID/dependencies" -H "Authorization: Bearer $PIVNET_TOKEN" | jq -r '.[] | .[] | .[] | select(.product.slug=="stemcells-ubuntu-xenial") | .id' 2>/dev/null | sed 1q)
 
-  STEMCELL_VERSION=$(curl -sX GET "https://network.pivotal.io/api/v2/products/elastic-runtime/releases/$RELEASE_ID/dependencies" -H "Authorization: Bearer $PIVNET_TOKEN" | jq -r '.[] | .[] | .[] | select(.product.slug=="stemcells-ubuntu-xenial") | .version' 2>/dev/null | sed 1q)
+  STEMCELL_TUPLE=$(curl -sX GET "https://network.pivotal.io/api/v2/products/elastic-runtime/releases/$RELEASE_ID/dependencies" -H "Authorization: Bearer $PIVNET_TOKEN" | jq -r '[.dependencies[] | select(.release.product.slug=="stemcells-ubuntu-xenial")] | max_by(.release.id) | {id: .release.id, version: .release.version}')
+
+  STEMCELL_ID=$(echo "$STEMCELL_TUPLE" | jq -r '.id')
+  STEMCELL_VERSION=$(echo "$STEMCELL_TUPLE" | jq -r '.version')
 
   STEMCELL_PRODUCT_URL=$(curl -sX GET "https://network.pivotal.io/api/v2/products/stemcells-ubuntu-xenial/releases/$STEMCELL_ID/product_files" -H "Authorization: Bearer $PIVNET_TOKEN" | jq -r '.product_files[] | select(.name | test("Azure"; "i")) | ._links.download.href')
 
