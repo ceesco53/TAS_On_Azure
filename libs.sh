@@ -6,6 +6,7 @@ source azure_paving.sh
 source opsman.sh
 source director.sh
 source tas.sh
+source env.sh
 
 is_sourced() {
    if [ -n "${ZSH_VERSION:-}" ]; then
