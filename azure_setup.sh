@@ -12,7 +12,6 @@ function azure_login(){
   SUBSCRIPTION_ID=$(echo "$SELECTED" | cut -f3 -w)
   TENANT_ID=$(echo "$SELECTED" | cut -f4 -w)
 
-  SP_DISPLAY_NAME=Service_Principal_for_BOSH
   SP_NAME="http://BoshAzure$RESOURCE_GROUP"
   DOMAIN="test.vmware.com"
   az account set --subscription "$SUBSCRIPTION_ID"
@@ -22,23 +21,19 @@ function azure_login(){
 
   APPLICATION_ID=$(az ad app list --identifier-uri "$SP_NAME".$DOMAIN -o tsv | cut -f2 -w)
 
-  if az ad sp list --display-name "$SP_DISPLAY_NAME" -o tsv | grep -q "$APPLICATION_ID" || true; then
-      echo "SP Already exists"
-  else
-      echo "Creating a Service Principal..."
-      az ad sp create --id "$APPLICATION_ID"
+    echo "Creating a Service Principal..."
+    az ad sp create --id "$APPLICATION_ID"
 
-      echo "Sleeping 1 minute"
-      sleep 60
+    echo "Sleeping 1 minute"
+    sleep 60
 
-      echo "Assigning your Service Principal the Owner role..."
-      az role assignment create --assignee "$SP_NAME".$DOMAIN \
-      --role "Owner" --scope /subscriptions/"$SUBSCRIPTION_ID"
+    echo "Assigning your Service Principal the Owner role..."
+    az role assignment create --assignee "$SP_NAME".$DOMAIN \
+    --role "Owner" --scope /subscriptions/"$SUBSCRIPTION_ID"
 
-      az provider register --namespace Microsoft.Storage
-      az provider register --namespace Microsoft.Network
-      az provider register --namespace Microsoft.Compute
-  fi
+    az provider register --namespace Microsoft.Storage
+    az provider register --namespace Microsoft.Network
+    az provider register --namespace Microsoft.Compute
 
   SP_PASSWORD=$(az ad sp credential reset --id "$APPLICATION_ID" -o json | jq -r .password)
   echo "SP_PASSWORD is $SP_PASSWORD"
