@@ -7,7 +7,7 @@ function azure_login(){
   echo "Log in with your VMware AD account on your browser"
   az login
 
-  SELECTED="$(az account list | grep -v "\-\-" | grep -v Name | fzf)"
+  SELECTED="$(az account list -o tsv | grep -v "\-\-" | grep -v Name | fzf)"
 
   SUBSCRIPTION_ID=$(echo "$SELECTED" | cut -f3 -w)
   TENANT_ID=$(echo "$SELECTED" | cut -f4 -w)
